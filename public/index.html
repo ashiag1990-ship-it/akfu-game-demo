@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ashia Keyz Film University</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #080811;
+      color: #f5efdf;
+      overflow: hidden;
+    }
+
+    .cinema-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #080811;
+      overflow: hidden;
+    }
+
+    /* CAMPUS STAGE */
+    .campus-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+    }
+
+    .campus-stage.zoomed {
+      transform: scale(1.4);
+      opacity: 0.3;
+    }
+
+    .campus-image-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .campus-bg {
+      width: 100%;
+      height: 100%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 720"><rect fill="%23080811" width="1290" height="720"/></svg>');
+      filter: brightness(1) contrast(1);
+      transition: filter 0.3s ease;
+    }
+
+    .campus-bg.dimmed {
+      filter: brightness(0.6) contrast(1.1);
+    }
+
+    /* INTERACTIVE SVG LAYER */
+    .interactive-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .building-group {
+      cursor: pointer;
+      transition: filter 0.3s ease;
+    }
+
+    .building-group:hover {
+      filter: drop-shadow(0 0 20px rgba(214, 172, 89, 0.6)) drop-shadow(0 0 40px rgba(154, 85, 234, 0.3));
+    }
+
+    .building-hotspot {
+      fill: url(#glowGradient);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .building-group:hover .building-hotspot {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .building-label {
+      font-size: 11px;
+      font-weight: 600;
+      fill: #D6AC59;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .building-group:hover .building-label {
+      opacity: 1;
+      animation: floatUp 0.8s ease-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.1; }
+      50% { opacity: 0.3; }
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(-5px); }
+    }
+
+    @keyframes glow {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(214, 172, 89, 0.4));
+      }
+      50% {
+        filter: drop-shadow(0 0 16px rgba(214, 172, 89, 0.8)) drop-shadow(0 0 24px rgba(154, 85, 234, 0.4));
+      }
+    }
+
+    /* PARTICLES */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+    }
+
+    .particle {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .particle-light {
+      width: 2px;
+      height: 2px;
+      background: radial-gradient(circle, #D6AC59, transparent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px #D6AC59;
+    }
+
+    /* MODAL STYLES */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 17, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(21, 16, 32, 0.98) 0%, rgba(30, 20, 50, 0.98) 100%);
+      border: 1px solid #D6AC59;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 600px;
+      width: 90%;
+      color: #f5efdf;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 0 60px rgba(214, 172, 89, 0.4), 0 0 120px rgba(154, 85, 234, 0.2);
+      animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-title {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #D6AC59 0%, #F1CE83 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      animation: fadeIn 0.6s ease 0.1s backwards;
+    }
+
+    .modal-subtitle {
+      font-size: 13px;
+      color: #9A55EA;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      animation: fadeIn 0.6s ease 0.2s backwards;
+    }
+
+    .modal-description {
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      color: #e0e0e0;
+      animation: fadeIn 0.6s ease 0.3s backwards;
+    }
+
+    .modal-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      animation: fadeIn 0.6s ease 0.4s backwards;
+    }
+
+    .modal-btn {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(214, 172, 89, 0.15) 0%, rgba(154, 85, 234, 0.1) 100%);
+      border: 1px solid #D6AC59;
+      color: #D6AC59;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #D6AC59, #9A55EA);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
+
+    .modal-btn:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 20px rgba(214, 172, 89, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .modal-btn:hover::before {
+      opacity: 1;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: #D6AC59;
+      font-size: 32px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .close-modal:hover {
+      color: #F1CE83;
+      background: rgba(214, 172, 89, 0.1);
+      transform: rotate(90deg);
+    }
+
+    /* AMBIENT LIGHTS */
+    .ambient-lights {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    .light-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.1;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .light-orb.gold {
+      background: #D6AC59;
+    }
+
+    .light-orb.purple {
+      background: #9A55EA;
+    }
+
+    .light-orb.blue {
+      background: #467BFF;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(20px, -20px); }
+      50% { transform: translate(-10px, 20px); }
+      75% { transform: translate(-20px, -10px); }
+    }
+
+    @media (max-width: 768px) {
+      .modal-content {
+        padding: 24px;
+      }
+
+      .modal-title {
+        font-size: 20px;
+      }
+
+      .modal-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .campus-bg {
+        background-size: cover;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const BUILDINGS = [
+      { id: 1, name: "Writers' Room", x: 280, y: 220, width: 120, height: 140, title: "WRITERS' ROOM", subtitle: "DEVELOP • WRITE • PLAN" },
+      { id: 2, name: "The Academy", x: 520, y: 180, width: 150, height: 160, title: "THE ACADEMY", subtitle: "LEARN • MASTER • GROW" },
+      { id: 3, name: "Director's Command Center", x: 780, y: 200, width: 130, height: 150, title: "DIRECTOR'S COMMAND CENTER", subtitle: "PLAN • MANAGE • BRING IT TO LIFE" },
+      { id: 4, name: "Dressing Room", x: 180, y: 350, width: 120, height: 130, title: "DRESSING ROOM", subtitle: "STYLE • TRANSFORM • IMAGINE" },
+      { id: 5, name: "Casting Studio", x: 420, y: 340, width: 140, height: 120, title: "CASTING STUDIO", subtitle: "DISCOVER • CAST • COLLABORATE" },
+      { id: 6, name: "Soundstage", x: 200, y: 520, width: 160, height: 140, title: "SOUNDSTAGE", subtitle: "SHOOT • DIRECT • PRODUCE" },
+      { id: 7, name: "Sound Lab", x: 470, y: 540, width: 130, height: 120, title: "SOUND LAB", subtitle: "MIX • DESIGN • MASTER" },
+      { id: 8, name: "Editing Suite", x: 700, y: 520, width: 140, height: 130, title: "EDITING SUITE", subtitle: "CUT • EDIT • PERFECT" },
+      { id: 9, name: "Talent Agency", x: 900, y: 380, width: 120, height: 140, title: "TALENT AGENCY", subtitle: "HIRE AGENTS • BUILD YOUR TEAM" },
+      { id: 10, name: "Premiere Lounge", x: 850, y: 540, width: 140, height: 130, title: "PREMIERE LOUNGE", subtitle: "SCREEN • NETWORK • CELEBRATE" },
+      { id: 11, name: "Connected Apps Publishing Dock", x: 950, y: 100, width: 140, height: 120, title: "CONNECTED APPS", subtitle: "INTEGRATE • PUBLISH • SHARE • GO GLOBAL" },
+      { id: 12, name: "Welcome Hub", x: 530, y: 380, width: 160, height: 150, title: "WELCOME HUB", subtitle: "DIRECTOR PLAZA • YOUR JOURNEY STARTS HERE" }
+    ];
+
+    function Particle() {
+      const particlesRef = useRef([]);
+
+      useEffect(() => {
+        const container = document.querySelector('.particles');
+        if (!container) return;
+
+        const createParticle = () => {
+          const particle = document.createElement('div');
+          particle.className = 'particle particle-light';
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.top = Math.random() * 100 + '%';
+          particle.style.animation = `floatUp ${3 + Math.random() * 3}s ease-out forwards`;
+          container.appendChild(particle);
+
+          setTimeout(() => particle.remove(), 6000);
+        };
+
+        const interval = setInterval(createParticle, 800);
+        return () => clearInterval(interval);
+      }, []);
+
+      return <div className="particles"></div>;
+    }
+
+    function App() {
+      const [activeModal, setActiveModal] = useState(null);
+      const [hoveredBuilding, setHoveredBuilding] = useState(null);
+
+      const handleBuildingClick = (building) => {
+        setActiveModal(building);
+      };
+
+      const closeModal = () => {
+        setActiveModal(null);
+      };
+
+      return (
+        <div className="cinema-container">
+          {/* Ambient Lights */}
+          <div className="ambient-lights">
+            <div className="light-orb gold" style={{ width: '400px', height: '400px', top: '-100px', left: '10%' }} />
+            <div className="light-orb purple" style={{ width: '300px', height: '300px', top: '20%', right: '15%' }} />
+            <div className="light-orb blue" style={{ width: '350px', height: '350px', bottom: '0', left: '50%' }} />
+          </div>
+
+          {/* Campus Stage */}
+          <div className={`campus-stage ${activeModal ? 'zoomed' : ''}`}>
+            <div className="campus-image-container">
+              <div
+                className={`campus-bg ${activeModal ? 'dimmed' : ''}`}
+                style={{
+                  backgroundImage: "url('/images/akfu-campus-master.jpg')",
+                }}
+              />
+
+              {/* Interactive SVG Layer */}
+              <div className="interactive-layer">
+                <svg viewBox="0 0 1290 720" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#D6AC59" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="#9A55EA" stopOpacity="0.2" />
+                    </radialGradient>
+                  </defs>
+
+                  {BUILDINGS.map(building => (
+                    <g
+                      key={building.id}
+                      className="building-group"
+                      onMouseEnter={() => setHoveredBuilding(building.id)}
+                      onMouseLeave={() => setHoveredBuilding(null)}
+                      onClick={() => handleBuildingClick(building)}
+                    >
+                      <rect
+                        className="building-hotspot"
+                        x={building.x}
+                        y={building.y}
+                        width={building.width}
+                        height={building.height}
+                        rx="6"
+                      />
+                      {hoveredBuilding === building.id && (
+                        <text
+                          className="building-label"
+                          x={building.x + building.width / 2}
+                          y={building.y - 10}
+                        >
+                          {building.name}
+                        </text>
+                      )}
+                    </g>
+                  ))}
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Particles */}
+          <Particle />
+
+          {/* Modal */}
+          <div className={`modal-overlay ${activeModal ? 'active' : ''}`} onClick={closeModal}>
+            <button className="close-modal" onClick={closeModal}>×</button>
+            {activeModal && (
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-title">{activeModal.title}</div>
+                <div className="modal-subtitle">{activeModal.subtitle}</div>
+                <div className="modal-description">
+                  Welcome to {activeModal.name}. This is your creative space to develop ideas, collaborate with talented creatives, and bring your vision to life.
+                </div>
+                <div className="modal-buttons">
+                  <button className="modal-btn">Enter Room</button>
+                  <button className="modal-btn">Learn More</button>
+                  <button className="modal-btn">Schedule</button>
+                  <button className="modal-btn">Resources</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
