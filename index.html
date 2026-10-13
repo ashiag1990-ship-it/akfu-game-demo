@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKFU Game Demo</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-pink: #ff006e;
+            --neon-cyan: #00f5ff;
+            --neon-green: #00ff00;
+            --neon-purple: #b300ff;
+            --dark-bg: #0a0e27;
+            --dark-secondary: #1a1a2e;
+            --text-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--dark-bg);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        html, body, #root {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            overflow: hidden;
+        }
+
+        .neon-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a0033 50%, #0a0e27 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            animation: twinkle 5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .login-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .login-box {
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 10px;
+            box-shadow: 0 0 20px var(--neon-cyan), inset 0 0 20px rgba(0, 245, 255, 0.1);
+            z-index: 11;
+        }
+
+        .neon-title {
+            font-size: 3em;
+            font-weight: bold;
+            text-align: center;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-cyan);
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--neon-cyan);
+            font-size: 0.9em;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-field {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-green);
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            background: rgba(0, 245, 255, 0.05);
+        }
+
+        .input-field::placeholder {
+            color: rgba(224, 224, 224, 0.5);
+        }
+
+        .play-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+            border: 2px solid var(--neon-pink);
+            color: white;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 1.1em;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        .play-btn:hover {
+            box-shadow: 0 0 20px var(--neon-pink), 0 0 30px var(--neon-purple);
+            transform: scale(1.05);
+        }
+
+        .play-btn:active {
+            transform: scale(0.98);
+        }
+
+        .arcade-lights {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .light {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .light-1 { background: var(--neon-pink); animation-delay: 0s; }
+        .light-2 { background: var(--neon-cyan); animation-delay: 0.5s; }
+        .light-3 { background: var(--neon-green); animation-delay: 1s; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .char-creation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .creation-box {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(26, 26, 46, 0.95);
+            border: 2px solid var(--neon-green);
+            border-radius: 10px;
+            box-shadow: 0 0 20px var(--neon-green);
+            z-index: 11;
+            margin: auto;
+        }
+
+        .char-preview {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 6px;
+        }
+
+        .avatar-large { font-size: 5em; filter: drop-shadow(0 0 10px var(--neon-cyan)); }
+        .char-name { font-size: 1.5em; color: var(--neon-pink); margin-bottom: 5px; }
+        .char-role { color: var(--neon-cyan); margin-bottom: 5px; }
+        .char-vibe { color: var(--neon-green); }
+
+        .customization { display: flex; flex-direction: column; gap: 20px; }
+        .option-group { display: flex; flex-direction: column; gap: 10px; }
+        .option-group label { color: var(--neon-cyan); font-weight: bold; text-transform: uppercase; }
+        .option-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; }
+
+        .option-btn {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-green);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+        .option-btn.active { background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple)); border-color: var(--neon-pink); color: white; }
+
+        .error-text { color: #ff4444; text-align: center; margin-top: 10px; }
+
+        .game-world-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(26, 26, 46, 0.8);
+            border-bottom: 2px solid var(--neon-pink);
+        }
+
+        .hud-left, .hud-right { flex: 1; }
+        .hud-center { flex: 2; text-align: center; }
+
+        .character-card {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 4px;
+            max-width: 300px;
+        }
+
+        .avatar-small { font-size: 2.5em; }
+        .world-title { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); font-size: 1.5em; }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255, 0, 110, 0.2);
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover { background: var(--neon-pink); color: var(--dark-bg); }
+
+        .game-viewport {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .game-world {
+            flex: 1;
+            position: relative;
+            background: var(--dark-secondary);
+            border: 2px solid var(--neon-cyan);
+            margin: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .player-avatar {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 30;
+            transition: all 0.05s linear;
+        }
+
+        .avatar-sprite { font-size: 3em; filter: drop-shadow(0 0 15px var(--neon-cyan)); }
+        .name-plate { color: var(--neon-cyan); font-size: 0.7em; margin-top: 5px; }
+
+        .npc-avatar {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .npc-sprite { font-size: 2.5em; filter: drop-shadow(0 0 10px var(--neon-green)); }
+        .npc-label { color: var(--neon-green); font-size: 0.7em; margin-top: 5px; }
+
+        .dialog-box {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--neon-pink);
+            border-radius: 6px;
+            padding: 20px 30px;
+            color: var(--text-color);
+            z-index: 40;
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        .controls-info {
+            padding: 10px 20px;
+            background: rgba(26, 26, 46, 0.8);
+            text-align: center;
+            color: var(--neon-green);
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            .neon-title { font-size: 2em; }
+            .char-preview { flex-direction: column; }
+            .creation-box { width: 95%; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const SKINS = ['🧔', '👨', '🧑', '👱', '🧔‍♀️'];
+        const OUTFITS = ['🎬 Director', '🎥 Cinematographer', '🎭 Actor', '🎨 Designer', '🎵 Composer'];
+        const VIBES = ['Cool', 'Artsy', 'Bold', 'Chill', 'Energetic'];
+
+        function Login({ onLogin }) {
+            return (
+                <div className="login-screen">
+                    <div className="neon-bg"><div className="stars"></div></div>
+                    <div className="login-box">
+                        <h1 className="neon-title">🎬 AKFU</h1>
+                        <p className="subtitle">Ashia Keyz Film Universe</p>
+                        <div className="login-form">
+                            <input type="email" placeholder="Email" className="input-field" />
+                            <input type="password" placeholder="Password" className="input-field" />
+                            <button className="play-btn" onClick={onLogin}>ENTER GAME →</button>
+                        </div>
+                        <div className="arcade-lights">
+                            <div className="light light-1"></div>
+                            <div className="light light-2"></div>
+                            <div className="light light-3"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function CharacterCreation({ onCreated }) {
+            const [name, setName] = useState('');
+            const [skin, setSkin] = useState(0);
+            const [outfit, setOutfit] = useState(0);
+            const [vibe, setVibe] = useState(0);
+            const [error, setError] = useState('');
+
+            const handleCreate = () => {
+                if (!name.trim()) {
+                    setError('Enter a name!');
+                    return;
+                }
+                const character = {
+                    name,
+                    skin: SKINS[skin],
+                    outfit: OUTFITS[outfit],
+                    vibe: VIBES[vibe],
+                    level: 1,
+                    exp: 0,
+                    joinedAt: new Date().toISOString()
+                };
+                onCreated(character);
+            };
+
+            return (
+                <div className="char-creation">
+                    <div className="neon-bg"><div className="stars"></div></div>
+                    <div className="creation-box">
+                        <h1 className="neon-title">Create Your Character</h1>
+                        <div style={{ marginBottom: '30px', padding: '20px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--neon-cyan)', borderRadius: '6px' }}>
+                            <div style={{ fontSize: '5em', textAlign: 'center', filter: 'drop-shadow(0 0 10px var(--neon-cyan))' }}>{SKINS[skin]}</div>
+                            <p className="char-name" style={{ textAlign: 'center' }}>{name || 'Your Name'}</p>
+                            <p className="char-role" style={{ textAlign: 'center' }}>{OUTFITS[outfit]}</p>
+                            <p className="char-vibe" style={{ textAlign: 'center' }}>Vibe: {VIBES[vibe]}</p>
+                        </div>
+                        <div className="customization">
+                            <div className="option-group">
+                                <label>Character</label>
+                                <div className="option-buttons">
+                                    {SKINS.map((s, i) => (
+                                        <button key={i} className={`option-btn ${i === skin ? 'active' : ''}`} onClick={() => setSkin(i)}>{s}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="option-group">
+                                <label>Role</label>
+                                <div className="option-buttons">
+                                    {OUTFITS.map((o, i) => (
+                                        <button key={i} className={`option-btn ${i === outfit ? 'active' : ''}`} onClick={() => setOutfit(i)}>{o}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="option-group">
+                                <label>Vibe</label>
+                                <div className="option-buttons">
+                                    {VIBES.map((v, i) => (
+                                        <button key={i} className={`option-btn ${i === vibe ? 'active' : ''}`} onClick={() => setVibe(i)}>{v}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <input type="text" maxLength="20" placeholder="Your character name..." value={name} onChange={(e) => { setName(e.target.value); setError(''); }} className="input-field" />
+                            {error && <p className="error-text">{error}</p>}
+                            <button className="play-btn" onClick={handleCreate}>SPAWN CHARACTER →</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function GameWorld({ character, onLogout }) {
+            const [position, setPosition] = useState({ x: 50, y: 50 });
+            const [direction, setDirection] = useState('down');
+            const [npcs] = useState([
+                { id: 1, name: 'Director NPC', x: 20, y: 30, emoji: '🎬' },
+                { id: 2, name: 'Camera Operator', x: 70, y: 60, emoji: '🎥' },
+                { id: 3, name: 'Sound Tech', x: 40, y: 80, emoji: '🎤' }
+            ]);
+            const [dialog, setDialog] = useState(null);
+
+            useEffect(() => {
+                const handleKeyPress = (e) => {
+                    const step = 5;
+                    const newPos = { ...position };
+                    switch (e.key) {
+                        case 'ArrowUp': case 'w': case 'W': newPos.y = Math.max(5, position.y - step); setDirection('up'); break;
+                        case 'ArrowDown': case 's': case 'S': newPos.y = Math.min(95, position.y + step); setDirection('down'); break;
+                        case 'ArrowLeft': case 'a': case 'A': newPos.x = Math.max(5, position.x - step); setDirection('left'); break;
+                        case 'ArrowRight': case 'd': case 'D': newPos.x = Math.min(95, position.x + step); setDirection('right'); break;
+                        default: return;
+                    }
+                    setPosition(newPos);
+                };
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
+            }, [position]);
+
+            const handleNpcClick = (npc) => {
+                setDialog(`${npc.name}: Welcome to AKFU, ${character.name}! Ready to create some films?`);
+                setTimeout(() => setDialog(null), 3000);
+            };
+
+            const getRotation = () => {
+                const rotations = { up: 0, down: 180, left: 270, right: 90 };
+                return rotations[direction] || 0;
+            };
+
+            return (
+                <div className="game-world-container">
+                    <div className="neon-bg"><div className="stars"></div></div>
+                    <div className="hud">
+                        <div className="hud-left">
+                            <div className="character-card">
+                                <div style={{ fontSize: '2.5em' }}>{character.skin}</div>
+                                <div>
+                                    <p style={{ color: 'var(--neon-pink)', fontWeight: 'bold' }}>{character.name}</p>
+                                    <p style={{ color: 'var(--neon-cyan)', fontSize: '0.9em' }}>{character.outfit}</p>
+                                    <p style={{ color: 'var(--neon-green)', fontSize: '0.9em' }}>LVL {character.level}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="hud-center"><h2 className="world-title">FILM UNIVERSE</h2></div>
+                        <div className="hud-right"><button className="logout-btn" onClick={onLogout}>EXIT GAME</button></div>
+                    </div>
+                    <div className="game-viewport">
+                        <div className="game-world">
+                            <div style={{ position: 'absolute', left: `${position.x}%`, top: `${position.y}%`, transform: `translate(-50%, -50%) rotate(${getRotation()}deg)`, zIndex: 30 }}>
+                                <div style={{ fontSize: '3em', filter: 'drop-shadow(0 0 15px var(--neon-cyan))' }}>{character.skin}</div>
+                                <div style={{ color: 'var(--neon-cyan)', fontSize: '0.7em', marginTop: '5px', textAlign: 'center' }}>{character.name}</div>
+                            </div>
+                            {npcs.map(npc => (
+                                <div key={npc.id} style={{ position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`, cursor: 'pointer' }} onClick={() => handleNpcClick(npc)}>
+                                    <div style={{ fontSize: '2.5em', filter: 'drop-shadow(0 0 10px var(--neon-green))' }}>{npc.emoji}</div>
+                                    <div style={{ color: 'var(--neon-green)', fontSize: '0.7em', marginTop: '5px' }}>{npc.name}</div>
+                                </div>
+                            ))}
+                            {dialog && <div className="dialog-box"><p>{dialog}</p></div>}
+                        </div>
+                        <div className="controls-info">WASD or Arrow Keys to move · Click NPCs to interact</div>
+                    </div>
+                    <div className="arcade-lights">
+                        <div className="light light-1"></div>
+                        <div className="light light-2"></div>
+                        <div className="light light-3"></div>
+                    </div>
+                </div>
+            );
+        }
+
+        function Home() {
+            const [screen, setScreen] = useState('login');
+            const [character, setCharacter] = useState(null);
+
+            useEffect(() => {
+                const saved = localStorage.getItem('akfu_character');
+                if (saved) {
+                    setCharacter(JSON.parse(saved));
+                    setScreen('game');
+                }
+            }, []);
+
+            return (
+                <div className="game-container">
+                    {screen === 'login' && <Login onLogin={() => setScreen('create')} />}
+                    {screen === 'create' && <CharacterCreation onCreated={(char) => { setCharacter(char); localStorage.setItem('akfu_character', JSON.stringify(char)); setScreen('game'); }} />}
+                    {screen === 'game' && character && <GameWorld character={character} onLogout={() => { setCharacter(null); localStorage.removeItem('akfu_character'); setScreen('login'); }} />}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<Home />, document.getElementById('root'));
+    </script>
+</body>
+</html>
