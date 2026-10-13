@@ -1,0 +1,8 @@
+{
+  "buildCommand": "echo Building",
+  "outputDirectory": ".",
+  "public": true,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" }
+  ]
+}
